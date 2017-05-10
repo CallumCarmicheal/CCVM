@@ -6,61 +6,61 @@ typedef int instr_t;
 typedef std::vector<instr_t> instr_a;
 
 /**
- * CAT	OPCODE		INSTR			pc+1        pc+2		DESCRIPTION
- * ----------------------------------------------------------------------------------------------------------------------------
- * integer:
- * |	0x00000001	iadd									integer add (pop 2 operands, add, push result)
- * |	0x00000002	isub                                    integer subtract,                 sp-1 -  sp
- * |	0x00000003	imul                                    integer multiply,                 sp-1 *  sp
- * | 	0x00000004	idiv                                    integer divide,                   sp-1 /  sp
- * |	0x00000005	ilt										integer less than,                sp-1 <  sp
- * |    0x00000006  ilteq                                   integer less than or equal to,    sp-1 <= sp
- * |    0x00000007  imt                                     integer more than,                sp-1 >  sp
- * |    0x00000008  imteq                                   integer more than or equal to,    sp-1 >= sp
- * |	0x00000009	ieq                                     integer equal to,                 sp-1 == sp                   
- * /
- *
- * branch:
- * |	0x00000010	br				addr					branch to address
- * |	0x00000011	brt				addr					branch if true
- * |	0x00000012	brf 			addr					branch if false
- * / 
- *
- * memory/data: 
- * |	0x00000020	load 			addr 					load local variable
- * |	0x00000021	gload 			addr 					load global variable
- * |	0x00000022	store 			addr 					store local variable
- * |	0x00000023	gstore 			addr					store global variable
- * |    0x00000024  loadp           addr                    load a parameter from call
- * /
- *
- * stack:
- * |	0x00000030	iconst			value					push integer constant to the top of the stack
- * |	0x00000031	pop										pop the top of the stack
- * /
- *
- * operations:
- * |    0x00000040	halt	
- * |	0x00000041	call			addr		noArgs		call addr, expect noArgs, after ret params are popped
- * |    0x00000042  callv           addr        noArgs      call addr, expect noArgs, do NOT pop params of stack!
- * |	0x00000043	ret										return from a function with the top of the stack as result, return val;
- * |	0x00000044	retn                                    return from a function with no result, EG: return; 
- * /
- *
- * system:
- * |	0x00000050	sysprinti								print the value on the top of the stack, values popped of the stack
- * |	0x00000051	sysprintc								print the value on the stack as a character, values popped of stack
- * |	0x00000052	sysprints 		strCnt					print as string until \0, values popped of stack
- * |	0x00000053	sysprintil								print the value on the top of the stack, values left on the stack
- * |	0x00000054	sysprintcl								print the value on the stack as a character, values left on stack
- * |	0x00000055	sysprintsl 		strCnt					print as string until \0, values left on stack
- * |    0x00000056  sysprintnl      	                    print a newline character
- * |    0x00000057  sysprintnlc 	nlCount                 print multiple new line characters (nlCount)
- * |    0x00000058  dbgtraces   	above,      below       print the stack by above and below.
- * |    0x00000059  dbgtracei   	above,      below       print the instructions above and below
- * |    0x0000005A  slp             amt                     sleep for amt milliseconds
- * /
- */
+* CAT  OPCODE      INSTR           pc+1        pc+2        DESCRIPTION
+* ----------------------------------------------------------------------------------------------------------------------------
+* integer:
+* |    0x00000001  iadd                                    integer add (pop 2 operands, add, push result)
+* |    0x00000002  isub                                    integer subtract,                 sp-1 -  sp
+* |    0x00000003  imul                                    integer multiply,                 sp-1 *  sp
+* |    0x00000004  idiv                                    integer divide,                   sp-1 /  sp
+* |    0x00000005  ilt                                     integer less than,                sp-1 <  sp
+* |    0x00000006  ilteq                                   integer less than or equal to,    sp-1 <= sp
+* |    0x00000007  imt                                     integer more than,                sp-1 >  sp
+* |    0x00000008  imteq                                   integer more than or equal to,    sp-1 >= sp
+* |    0x00000009  ieq                                     integer equal to,                 sp-1 == sp
+* /
+*
+* branch:
+* |    0x00000010  br              addr                    branch to address
+* |    0x00000011  brt             addr                    branch if true
+* |    0x00000012  brf             addr                    branch if false
+* /
+*
+* memory/data:
+* |    0x00000020  load            addr                    load local variable
+* |    0x00000021  gload           addr                    load global variable
+* |    0x00000022  store           addr                    store local variable
+* |    0x00000023  gstore          addr                    store global variable
+* |    0x00000024  loadp           addr                    load a parameter from call
+* /
+*
+* stack:
+* |    0x00000030  iconst          value                   push integer constant to the top of the stack
+* |    0x00000031  pop                                     pop the top of the stack
+* /
+*
+* operations:
+* |    0x00000040  halt
+* |    0x00000041  call            addr        noArgs      call addr, expect noArgs, after ret params are popped
+* |    0x00000042  callv           addr        noArgs      call addr, expect noArgs, do NOT pop params of stack!
+* |    0x00000043  ret                                     return from a function with the top of the stack as result, return val;
+* |    0x00000044  retn                                    return from a function with no result, EG: return;
+* /
+*
+* system:
+* |    0x00000050  sysprinti                               print the value on the top of the stack, values popped of the stack
+* |    0x00000051  sysprintc                               print the value on the stack as a character, values popped of stack
+* |    0x00000052  sysprints       strCnt                  print as string until \0, values popped of stack
+* |    0x00000053  sysprintil                              print the value on the top of the stack, values left on the stack
+* |    0x00000054  sysprintcl                              print the value on the stack as a character, values left on stack
+* |    0x00000055  sysprintsl      strCnt                  print as string until \0, values left on stack
+* |    0x00000056  sysprintnl                              print a newline character
+* |    0x00000057  sysprintnlc     nlCount                 print multiple new line characters (nlCount)
+* |    0x00000058  dbgtraces       above,      below       print the stack by above and below.
+* |    0x00000059  dbgtracei       above,      below       print the instructions above and below
+* |    0x0000005A  slp             amt                     sleep for amt milliseconds
+* /
+*/
 
 /* class Instruction {
 private:
