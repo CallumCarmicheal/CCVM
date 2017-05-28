@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "ccvm/instructions.h"
 #include "ccvm/vm.h"
+#include <iostream>
 
 int main() {
     CCVM vm;
@@ -50,7 +51,7 @@ int main() {
 
     auto prog_Functions = instr_a {
     // .def ADD(2: x, 1: y), (x+1) + y
-    /* 000 */ DBGTRACES, 0, 5,      // Trace the stack, print the stack
+    /* 000 */ DBGTRACES, 0, 0,      // Trace the stack, print the stack
     /* 003 */ LOADP, 1,             // y
     /* 005 */ LOADP, 2,             // x
 
@@ -62,17 +63,17 @@ int main() {
     /* 012 */ RET,                  // Return stack val
 
     // .def INC(1: x), Add 1 to x
-    /* 013 */ DBGTRACES, 4, 4,      // Trace the stack
+    /* 013 */ DBGTRACES, 0, 0,      // Trace the stack
     /* 016 */ LOADP, 1,             // x
-    /* 018 */ ICONST, 0,            // add 1 to the stack
+    /* 018 */ ICONST, 1,            // add 1 to the stack
     /* 020 */ IADD,                 // x + 1
-    /* 021 */ DBGTRACES, 6, 6,      // Debug trace the stack
+    /* 021 */ DBGTRACES, 0, 0,      // Debug trace the stack
     /* 024 */ RET,                  // return x
 
     // .def MAIN
-    /* 025 */ ICONST, 3,        // 3
-    /* 000 */ ICONST, 5,        // 5
-    /* 000 */ CALL, 0, 2,       // int r = ADD( x: 3, y: 5 )
+    /* 025 */ ICONST, 3,            // 3, x
+    /* 000 */ ICONST, 5,            // 5, y
+    /* 000 */ CALL, 0, 2,           // int r = ADD( x: 3, y: 5 )
         
     // PRINT THE ADDED VALUE 2 times, to test
     // if the values are still on stack after print
@@ -85,12 +86,32 @@ int main() {
     /* 000 */ HALT
     };
 
+
+    auto prog_MemoryString = instr_a{
+        ICONST, 'H',
+        ICONST, 'E',
+        ICONST, 'L',
+        ICONST, 'L',
+        ICONST, 'O',
+        ICONST, '\n',
+
+        // Store the 6 characters 
+        // at memory[0]+5
+        GSTORES, 0, 6,
+
+        // Start at address 0 
+        // Print 6 characters, Hello(\n)
+        SYSPRINTSM, 0, 6,
+        HALT
+    };
+
     // bytes, entry point, memory section size
-    vm.Initialize( prog_Functions, 25, 0);
+    vm.Initialize(prog_MemoryString, 0, 6);
 
     vm.Execute();
 
-    _gettch();
+    int a = 0;
+    std::cin >> a;
 
     return 0;
 }

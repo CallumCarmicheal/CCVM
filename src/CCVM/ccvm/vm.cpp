@@ -28,10 +28,10 @@ void CCVM::Execute() {
     instr_t v3 = 0; // Tmp 3 - int
 
     int x = 0;
-    int instrCount = static_cast<int>(code.size());
+    int instrCount = static_cast<int>(code.size())-1;
 
     // Print the sizes
-    printf("len (opcodes) = %i\n",  code.size());
+    printf("len (opcodes) = %i\n",  instrCount);
     printf("len (stack)   = %i\n",  stack.size());
     printf("len (memory)  = %i\n",  memory.size());
     printf("pc = %i\n|- opcode: %i\n|- asm: %s\n\n", this->pc, code[pc], instructionToString(code[pc]));
@@ -49,36 +49,54 @@ void CCVM::Execute() {
             break;
         }
 
-        printf("     PC: %03.i, INSTR:    %s\n", pc, instructionToString(code[pc]));
+        printf("     SP: %03.i, PC: %03.i, INSTR:    %s\n", sp, pc, instructionToString(code[pc]));
         
         switch (code[pc]) {
       // Integer:
         case IADD:
-            // stack = 32
-            // stack[31] = stack[32] + stack[31];
-            // 
             v2 = stack[sp--];
             v1 = stack[sp--];
             stack[++sp] = v1 + v2;
-
-            printf("IADD: %i + %i = %i\n", v1, v2, v1+v2);
-
-            // print the stack
-            tracePrintStack(3, 5);
+            //printf("IADD: %i + %i = %i\n", v1, v2, v1+v2);
             break;
 
         case ISUB: 
-            // 
-            // 
-            // 
+            v2 = stack[sp--];
+            v1 = stack[sp--];
+            stack[++sp] = v1 - v2;
             break;
-        case IMUL: break;
-        case IDIV: break;
-        case ILT:  break;
-        case IEQ:  break;
+        case IMUL: 
+            v2 = stack[sp--];
+            v1 = stack[sp--];
+            stack[++sp] = v1 * v2; 
+            break;
+        case IDIV: 
+            v2 = stack[sp--];
+            v1 = stack[sp--];
+            stack[++sp] = v1 / v2;
+            break;
+        case ILT:  
+            v2 = stack[sp--];
+            v1 = stack[sp--];
+            stack[++sp] = v1 < v2;
+            break;
+        case IEQ:  
+            v2 = stack[sp--];
+            v1 = stack[sp--];
+            stack[++sp] = v1 > v2; 
+            break;
+        case IINC:
+            stack[sp]++; 
+            break;
+        case IDEC: 
+            stack[sp]--;
+            break;
 
-    // Floating Point: 
-        // No functions yet
+        case ICONST:
+            // Store the next opcode into the stack
+            // as a integer const
+            stack[++sp] = code[++pc];
+            break;
 
     // Branch:
         case BR: 
@@ -95,25 +113,15 @@ void CCVM::Execute() {
             if (stack[sp] == 0) pc = v1;
             break;
 
-    // Data/Memory:
+    // Memory/Stack:
 
         case LOAD:
             // Set top of stack to stack[ FP + ADDR ]
             stack[++sp] = stack[fp + code[++pc]];
             break;
-        case LOADP:
-            // 0 = Default to noArgs
-            // 1 = Arg1
-            // ... etc
-
-            v1 = code[++pc];
-            //printf("addr = %i\n", v1);
-            //tracePrintStack(6, 6);
-            //printf("stack[%i] = stack[( (%i-2 = %i) + %i ) = %i] = %i\n", sp+1, fp, fp-2, v1, fp-2 - v1, stack[fp-2 - v1]);
-            printf("Loaded param: %i = %i, stack[%i]\n", v1, stack[fp -2 -v1], fp -2 -v1);
-
-            stack[++sp] = stack[fp -2 -v1];
-            break;
+        case LOADR: 
+            stack[++sp] = stack[sp - code[++sp]];
+            break; 
         case GLOAD: 
             // Load the value at memory[addr] to top of stack
             stack[++sp] = memory[code[++pc]];
@@ -127,13 +135,48 @@ void CCVM::Execute() {
             memory[code[++pc]] = stack[sp];
             break;
 
-    // Stack:
-        case ICONST:
-            // Store the next opcode into the stack
-            // as a integer const
-            stack[++sp] = code[++pc];
+    
+        case GSTORES: 
+            this->tracePrintInstructions(4, 4);
+            this->tracePrintStack(1, 7);
+
+            // Addr
+            v1 = code[++pc];
+            // Length
+            v2 = code[++pc];
+
+            printf("Addr = %zi, Len = %zi \n", v1, v2);
+
+            for (; sp > v2; sp--) {
+                printf("SP: %03.i\n", sp);
+                printf("sp:%03.i, v2:%03.i, %c\n", sp, v2, stack[sp]);
+                memory[v1++] = stack[sp];
+            }
+
+            // v1 = addr, v2 = len
+            v1 = code[++pc];
+            v2 = code[++pc];
+
+
+
             break;
 
+        // TODO:
+        case GLOADS: break;
+
+        case LOADP:
+            // 0 = Default to noArgs
+            // 1 = Arg1
+            // ... etc
+
+            v1 = code[++pc];
+            //printf("addr = %i\n", v1);
+            //tracePrintStack(6, 6);
+            //printf("stack[%i] = stack[( (%i-2 = %i) + %i ) = %i] = %i\n", sp+1, fp, fp-2, v1, fp-2 - v1, stack[fp-2 - v1]);
+            printf("Loaded param: %i = %i, stack[%i]\n", v1, stack[fp - 2 - v1], fp - 2 - v1);
+
+            stack[++sp] = stack[fp - 2 - v1];
+            break;
         case POP:
             // Decrement the sp counter
             sp--;
@@ -167,10 +210,11 @@ void CCVM::Execute() {
             printf("call %i, %i. fp = %i\n", v1, v2, fp);
 
             break;
-
+            
+        // TODO:
+        case CALLV : break;
         case RET: 
             // Check if fp == -1
-
             if (fp == -1) {
                 // Show error
                 printf("There is no where to return to, EXECUTION EXCEPTION\n");
@@ -186,22 +230,19 @@ void CCVM::Execute() {
             // v1 = return value
             // v2 = noargs
             v1 = stack[sp--];   // Pop return address
-
             sp = fp;            // Jump over locals to our frame
             pc = stack[sp--];   // Pop the return address, jmp to next instruction (pc is incremented) 
             fp = stack[sp--];   // Restore previous fp (allows recursion)
             v2 = stack[sp--];   // How many args to throw away
-
             sp -= v2;           // Pop the arguments
-
             stack[++sp] = v1;   // Leave the result on stack
 
-            printf("sp   = %i\npc   = %i\nfp   = %i\nargs = %i\nres  = %i\n", sp, pc, fp, v2, v1);
-            fflush(stdout);
-
-
+            // Debug:
+            //printf("sp   = %i\npc   = %i\nfp   = %i\nargs = %i\nres  = %i\n", sp, pc, fp, v2, v1);
+            //fflush(stdout);
             break;
 
+        // TODO:
         case RETN:
             break;
 
@@ -212,6 +253,7 @@ void CCVM::Execute() {
     // System:
         case SYSPRINTI:  printf("%i", stack[sp--]); break;
         case SYSPRINTIL: printf("%i", stack[sp]);   break;
+
         case SYSPRINTC:  putchar(stack[sp--]);      break;
         case SYSPRINTCL: putchar(stack[sp]);        break;
 
@@ -241,8 +283,30 @@ void CCVM::Execute() {
 
             while (v1 <= sp) putchar(stack[v1++]);
             sp = v2;
-
             break;
+
+        // TODO:
+        case SYSPRINTSZ:    break;
+        case SYSPRINTSZL:   break;
+
+        case SYSPRINTSM:    
+            // we want to print off the characters stored in memory, 
+            // to do this we will be setting v1 to our starting address, 
+            // and v2 the ending address. 
+            // this looks like v1 = addr, v2 = addr + len then we loop until 
+            // v1 == v2 while looping print off each character we have in memory[v1]
+            // 
+            // v1 = addr
+            // v2 = len
+            v1 = code[++pc];
+            v2 = v1 + code[++pc];
+
+            for (; v1 < v2; v1++) {
+                putchar(memory[v1]);
+            }
+            
+            break;
+        case SYSPRINTSZM:   break;
 
         case SYSPRINTNL:  putchar('\n'); break;
         case SYSPRINTNLC: 
@@ -275,7 +339,7 @@ void CCVM::Execute() {
         
         pc++;
 
-        Sleep(1000);
+        Sleep(10);
     }
     
     printf("finished execution \n");
@@ -287,14 +351,14 @@ void CCVM::tracePrintStack(int above, int below) {
     printf("Stack Trace: sp = %i, top: %i, below: %i\n", sp, above, below);
     
     for (int x = above; x > 0; x--) 
-        printf("    stack[ sp +%.2d (%03.i) ] = %i\n", x, sp+x, stack[sp+x]);
+        printf("    stack[ sp +%.2d (%03.i) ] = [%c] %i\n", x, sp+x, stack[sp+x]);
     
     if (sp == -1)
-         printf("--> stack[ sp     (%03.i) ] = NULL\n", sp);
-    else printf("--> stack[ sp     (%03.i) ] = %i\n",   sp, stack[sp]);
+         printf("--> stack[ sp     (%03.i) ] = [ ] NULL\n", sp);
+    else printf("--> stack[ sp     (%03.i) ] = [%c] %i\n",  sp, stack[sp], stack[sp]);
 
     for (int x = 1; (x <= below) && (sp - x >= 0); x++) 
-        printf("    stack[ sp -%.2d (%03.i) ] = %i\n", x, sp-x, stack[sp-x]);
+        printf("    stack[ sp -%.2d (%03.i) ] = [%c] %i\n", x, sp-x, stack[sp-x]);
 }
 
 void CCVM::tracePrintInstructions(int above, int below) {

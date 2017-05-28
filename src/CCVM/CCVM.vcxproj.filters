@@ -11,6 +11,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="ccvm\instructions.h" />
     <ClInclude Include="ccvm\vm.h" />
+    <ClInclude Include="ccvm\compiler\compiler.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp" />
