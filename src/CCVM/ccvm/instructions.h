@@ -27,6 +27,9 @@ typedef std::vector<instr_t> instr_a;
 * |    0x00000010  br              addr                    branch to address
 * |    0x00000011  brt             addr                    branch if true
 * |    0x00000012  brf             addr                    branch if false
+* |    0x00000013  brs                                     branch to address on stack
+* |    0x00000014  brts                                    branch to address on stack (sp-1) if true
+* |    0x00000015  brfs                                    brnach to address on stack (sp-1) if false
 * /
 *
 * memory/stack:
@@ -74,6 +77,7 @@ typedef std::vector<instr_t> instr_a;
 * |    0x0000005C  dbgtraces       above       below       print the stack by above and below.
 * |    0x0000005D  dbgtracei       above       below       print the instructions above and below
 * |    0x0000005E  slp             amt                     sleep for amt milliseconds
+* |    0x0000005F  syspcs                                  store current program counter to top of stack
 * /
 */
 
@@ -100,6 +104,9 @@ static const instr_t ICONST      = 0x0C;
 static const instr_t BR          = 0x10;
 static const instr_t BRT         = 0x11;
 static const instr_t BRF         = 0x12;
+static const instr_t BRS         = 0x13;
+static const instr_t BRST        = 0x14;
+static const instr_t BRSF        = 0x15;
 
 // Memory/Stack:
 static const instr_t LOAD        = 0x20;
@@ -140,6 +147,7 @@ static const instr_t SYSPRINTNLC = 0x5B;
 static const instr_t DBGTRACES   = 0x5C;
 static const instr_t DBGTRACEI   = 0x5D;
 static const instr_t SLP         = 0x5E;
+static const instr_t SYSPCS      = 0x5F;
 
 const char* instructionToString(instr_t instruction);
 int instructionReservation(instr_t instruction);

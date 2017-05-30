@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "windows.h" 
 
+char* DisplaySpecialChar(char c);
+
 CCVM::CCVM() {}
 
 // Setup the VM
@@ -49,7 +51,7 @@ void CCVM::Execute() {
             break;
         }
 
-        printf("     SP: %03.i, PC: %03.i, INSTR:    %s\n", sp, pc, instructionToString(code[pc]));
+        printf("     SP: %03.d, PC: %03.d, INSTR:    %s\n", sp, pc, instructionToString(code[pc]));
         
         switch (code[pc]) {
       // Integer:
@@ -57,9 +59,9 @@ void CCVM::Execute() {
             v2 = stack[sp--];
             v1 = stack[sp--];
             stack[++sp] = v1 + v2;
-            //printf("IADD: %i + %i = %i\n", v1, v2, v1+v2);
-            break;
 
+            // DEBUG: printf("IADD: %i + %i = %i\n", v1, v2, v1+v2);
+            break;
         case ISUB: 
             v2 = stack[sp--];
             v1 = stack[sp--];
@@ -100,21 +102,38 @@ void CCVM::Execute() {
 
     // Branch:
         case BR: 
+            // Jmp to addr
             pc = code[++pc];
             break;
 
         case BRT:
+            // Jmp to addr if true
             v1 = code[++pc];
-            if (stack[sp] == 1) pc = v1;
+            if (stack[sp--] == 1) pc = v1;
             break;
 
         case BRF: 
+            // Jmp to addr if false
             v1 = code[++pc];
-            if (stack[sp] == 0) pc = v1;
+            if (stack[sp--] == 0) pc = v1;
+            break;
+        case BRS:   
+            // Jmp to addr on stack
+            // sp = addr
+            pc = stack[sp--];
+            break;
+        case BRST: 
+            // Jmp to addr on stack, if condition == 1
+            // sp = condition, sp-1 = addr
+            if (stack[sp--] == 1) pc = stack[sp--];
+            break;
+        case BRSF: 
+            // Jmp to addr on stack, if condition == 0
+            // sp = condition, sp-1 = addr
+            if (stack[sp--] == 0) pc = stack[sp--];
             break;
 
     // Memory/Stack:
-
         case LOAD:
             // Set top of stack to stack[ FP + ADDR ]
             stack[++sp] = stack[fp + code[++pc]];
@@ -128,36 +147,51 @@ void CCVM::Execute() {
             break;
         case STORE:
             // Store top of stack to STACK [ FP + ADDR ] 
-            stack[fp + code[++pc]] = stack[sp];
+            stack[fp + code[++pc]] = stack[++sp];
             break;
         case GSTORE: 
-            // Set memory to top of stack
-            memory[code[++pc]] = stack[sp];
+            // Push memory to top of stack
+            memory[code[++pc]] = stack[++sp];
             break;
-
-    
         case GSTORES: 
-            this->tracePrintInstructions(4, 4);
-            this->tracePrintStack(1, 7);
+            // Assumes the string format is 
+            // pushed in the correct format,
+            // LEFT -> RIGHT = TOP -> BOTTOM
+            //  
+            // EG:  [sp - 2] ICONST H
+            //      [sp - 1] ICONST E
+            //      [sp - 0] ICONST \n
+            //
 
-            // Addr
+            // DEBUG: this->tracePrintInstructions(4, 4);
+            // DEBUG: this->tracePrintStack(1, 7);
+
+            // V1   ADDR = 0
+            // V2   LEN  = 6
+            // V3   SP   = SP
+            //      SP   = (SP - LEN + 1) 
+            //
+            // After the string has been loaded into memory
+            // it is popped of the stack. SP = SP - LEN(v2)
+
             v1 = code[++pc];
-            // Length
             v2 = code[++pc];
+            v3 = sp;
+            sp = sp - v2 + 1;
 
-            printf("Addr = %zi, Len = %zi \n", v1, v2);
+            printf("Stack Pointer Before: %i\n", sp);
+            // DEBUG: printf("V1 (ADDR) = %i, V2 (LEN) = %i, V3 = SP (%i), SP = %i\n", v1, v2, v3, sp);
 
-            for (; sp > v2; sp--) {
-                printf("SP: %03.i\n", sp);
-                printf("sp:%03.i, v2:%03.i, %c\n", sp, v2, stack[sp]);
+            for (; sp <= v3; sp++) {
+                // DEBUG: printf("SP[%03.i] = [%c]\n", sp, stack[sp]);
                 memory[v1++] = stack[sp];
             }
 
-            // v1 = addr, v2 = len
-            v1 = code[++pc];
-            v2 = code[++pc];
+            // TODO: Check stack pointer
+            sp = sp - v2 - 1;
 
-
+            // DEBUG: printf("Stack Pointer After: %i\n", sp);
+            // DEBUG: this->tracePrintStack(v2 + 2, 3);
 
             break;
 
@@ -170,10 +204,11 @@ void CCVM::Execute() {
             // ... etc
 
             v1 = code[++pc];
-            //printf("addr = %i\n", v1);
-            //tracePrintStack(6, 6);
-            //printf("stack[%i] = stack[( (%i-2 = %i) + %i ) = %i] = %i\n", sp+1, fp, fp-2, v1, fp-2 - v1, stack[fp-2 - v1]);
-            printf("Loaded param: %i = %i, stack[%i]\n", v1, stack[fp - 2 - v1], fp - 2 - v1);
+
+            //DEBUG: printf("addr = %i\n", v1);
+            //DEBUG: tracePrintStack(6, 6);
+            //DEBUG: printf("stack[%i] = stack[( (%i-2 = %i) + %i ) = %i] = %i\n", sp+1, fp, fp-2, v1, fp-2 - v1, stack[fp-2 - v1]);
+            //DEBUG: printf("Loaded param: %i = %i, stack[%i]\n", v1, stack[fp - 2 - v1], fp - 2 - v1);
 
             stack[++sp] = stack[fp - 2 - v1];
             break;
@@ -212,8 +247,10 @@ void CCVM::Execute() {
             break;
             
         // TODO:
-        case CALLV : break;
-        case RET: 
+        case CALLV: break;
+
+        case RET:
+        case RETN:
             // Check if fp == -1
             if (fp == -1) {
                 // Show error
@@ -227,23 +264,20 @@ void CCVM::Execute() {
                 return;
             }
 
-            // v1 = return value
-            // v2 = noargs
-            v1 = stack[sp--];   // Pop return address
-            sp = fp;            // Jump over locals to our frame
-            pc = stack[sp--];   // Pop the return address, jmp to next instruction (pc is incremented) 
-            fp = stack[sp--];   // Restore previous fp (allows recursion)
-            v2 = stack[sp--];   // How many args to throw away
-            sp -= v2;           // Pop the arguments
-            stack[++sp] = v1;   // Leave the result on stack
+            // v1 = Return value
+            // v2 = Number of Args
+            v1 = stack[sp--];           // Pop return address
+            sp = fp;                    // Jump over locals to our frame
+            pc = stack[sp--];           // Pop the return address, jmp to next instruction (pc is incremented) 
+            fp = stack[sp--];           // Restore previous fp (allows recursion)
+            v2 = stack[sp--];           // How many args to throw away
+            sp -= v2;                   // Pop the arguments
 
-            // Debug:
-            //printf("sp   = %i\npc   = %i\nfp   = %i\nargs = %i\nres  = %i\n", sp, pc, fp, v2, v1);
-            //fflush(stdout);
-            break;
+            if (code[pc] == RET)
+                stack[++sp] = v1;       // Leave the result on stack
 
-        // TODO:
-        case RETN:
+            // DEBUG: printf("sp   = %i\npc   = %i\nfp   = %i\nargs = %i\nres  = %i\n", sp, pc, fp, v2, v1);
+            // DEBUG: fflush(stdout);
             break;
 
         case HALT:
@@ -281,7 +315,11 @@ void CCVM::Execute() {
             v1 = sp - v3 + 1;
             v2 = (code[pc-1] == SYSPRINTSL) ? sp : sp - v3;
 
+            printf("SP = %d, v2 = %i\n", sp, v2);
+
             while (v1 <= sp) putchar(stack[v1++]);
+
+            // Restore our stackpointer
             sp = v2;
             break;
 
@@ -302,7 +340,8 @@ void CCVM::Execute() {
             v2 = v1 + code[++pc];
 
             for (; v1 < v2; v1++) {
-                putchar(memory[v1]);
+                printf("v1 = %i, char = [%c] int = [%i]\n", v1, memory[v1], memory[v1]);
+                //putchar(memory[v1]);
             }
             
             break;
@@ -347,18 +386,29 @@ void CCVM::Execute() {
 
 // TODO: Make functions that dump registers and other information
 
+instr_t* DisplaySpecialChar(instr_t* c) {
+    if (c[0] == 10) {
+        // DEBUG: printf(" == 10 ");
+        // I dont know how this works, it just does.
+        return new instr_t[1]{ 'n\\' };
+    }
+
+    // DEBUG: printf(" != 10 ");
+    return c;
+}
+
 void CCVM::tracePrintStack(int above, int below) {
     printf("Stack Trace: sp = %i, top: %i, below: %i\n", sp, above, below);
     
     for (int x = above; x > 0; x--) 
-        printf("    stack[ sp +%.2d (%03.i) ] = [%c] %i\n", x, sp+x, stack[sp+x]);
+        printf("    stack[ sp +%.2d (%03.i) ] = [%2s] %i\n", x, sp+x, DisplaySpecialChar(&stack[sp+x]), stack[sp + x]);
     
     if (sp == -1)
          printf("--> stack[ sp     (%03.i) ] = [ ] NULL\n", sp);
-    else printf("--> stack[ sp     (%03.i) ] = [%c] %i\n",  sp, stack[sp], stack[sp]);
+    else printf("--> stack[ sp     (%03.i) ] = [%2s] %i\n",  sp, DisplaySpecialChar(&stack[sp]), stack[sp]);
 
     for (int x = 1; (x <= below) && (sp - x >= 0); x++) 
-        printf("    stack[ sp -%.2d (%03.i) ] = [%c] %i\n", x, sp-x, stack[sp-x]);
+        printf("    stack[ sp -%.2d (%03.i) ] = [%2s] %i\n", x, sp-x, DisplaySpecialChar(&stack[sp-x]), stack[sp-x]);
 }
 
 void CCVM::tracePrintInstructions(int above, int below) {

@@ -19,6 +19,9 @@ const char* instructionToString(instr_t instruction) {
     case BR:            return "BR"; break;
     case BRT:           return "BRT"; break;
     case BRF:           return "BRF"; break;
+    case BRS:           return "BRS"; break;
+    case BRST:          return "BRST"; break;
+    case BRSF:          return "BRSF"; break;
 
         // Memory/Stack
     case LOAD:          return "LOAD"; break;
@@ -54,60 +57,11 @@ const char* instructionToString(instr_t instruction) {
     case DBGTRACES:     return "DBGTRACES"; break;
     case DBGTRACEI:     return "DBGTRACEI"; break;
     case SLP:           return "SLP"; break;
+    case SYSPCS:        return "SYSPCS"; break;
 
     default:            return "UNKNOWN"; break;
     }
 }
-
-/*
-static const char* instructionToStringVM(instr_t instruction, CCVM vm) {
-std::string instr = "";
-
-switch (instruction) {
-case IADD:          instr = "IADD";  break;
-case ISUB:          instr = "ISUB";  break;
-case IMUL:          instr = "IMUL";  break;
-case IDIV:          instr = "IDIV";  break;
-case ILT:           instr = "ILT";   break;
-case ILTEQ:         instr = "ILTEQ"; break;
-case IMT:           instr = "IMT";   break;
-case IMTEQ:         instr = "IMTEQ"; break;
-case IEQ:           instr = "IEQ";   break;
-
-case BR:            instr = "BR   " + ;  break;
-case BRT:           instr = "BRT  " + ; break;
-case BRF:           instr = "BRF  " + ; break;
-
-case LOAD:          instr = "LOAD"; break;
-case GLOAD:         instr = "GLOAD"; break;
-case STORE:         instr = "STORE"; break;
-case GSTORE:        instr = "GSTORE"; break;
-case LOADP:         instr = "LOADP"; break;
-
-case ICONST:        instr = "ICONST"; break;
-case POP:           instr = "POP"; break;
-
-case HALT:          instr = "HALT"; break;
-case CALL:          instr = "CALL"; break;
-case RET:           instr = "RET"; break;
-case RETN:          instr = "RETN"; break;
-
-case SYSPRINTI:     instr = "SYSPRINTI"; break;
-case SYSPRINTC:     instr = "SYSPRINTC"; break;
-case SYSPRINTS:     instr = "SYSPRINTS"; break;
-case SYSPRINTIL:    instr = "SYSPRINTIL"; break;
-case SYSPRINTCL:    instr = "SYSPRINTCL"; break;
-case SYSPRINTSL:    instr = "SYSPRINTSL"; break;
-case SYSPRINTNL:    instr = "SYSPRINTNL"; break;
-case SYSPRINTNLC:   instr = "SYSPRINTNLC"; break;
-case DBGTRACES:     instr = "DBGTRACES"; break;
-case DBGTRACEI:     instr = "DBGTRACEI"; break;
-
-default:            instr = "UNKNOWN"; break;
-}
-
-return instr.c_str();
-} //*/
 
 //*
 int instructionReservation(instr_t instruction) {
@@ -122,18 +76,16 @@ int instructionReservation(instr_t instruction) {
     case SYSPRINTS:     case SYSPRINTSZM:
     case SYSPRINTSL:    case SYSPRINTNLC:
     case SLP:
-        return 1; break;
+        return 1; 
 
     case CALL:          case DBGTRACEI:
     case DBGTRACES:     case GSTORES:
     case GLOADS:        case CALLV:
 
     case SYSPRINTSM:
-        return 2; break;
+        return 2;
 
     default:
         return 0;
     }
-
-    return 0;
 } //*/

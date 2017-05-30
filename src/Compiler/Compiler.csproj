@@ -42,6 +42,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CCASM\Compiler.cs" />
+    <Compile Include="CCASM\CompilerState.cs" />
+    <Compile Include="CCASM\Exceptions\CompilerException.cs" />
+    <Compile Include="CCASM\Helper.cs" />
+    <Compile Include="CCASM\Instruction.cs" />
+    <Compile Include="CCASM\Instructions.cs" />
+    <Compile Include="CCASM\Label.cs" />
+    <Compile Include="CCASM\Section.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

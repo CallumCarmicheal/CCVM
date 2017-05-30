@@ -95,13 +95,17 @@ int main() {
         ICONST, 'O',
         ICONST, '\n',
 
+        SYSPRINTSL, 6,
+
+        DBGTRACES, 1, 6,
+
         // Store the 6 characters 
         // at memory[0]+5
-        GSTORES, 0, 6,
+        // GSTORES, 0, 6,
 
         // Start at address 0 
         // Print 6 characters, Hello(\n)
-        SYSPRINTSM, 0, 6,
+        // SYSPRINTSM, 0, 6,
         HALT
     };
 
